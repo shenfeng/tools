@@ -1,0 +1,12 @@
+ns me.shenfeng.api
+
+
+struct Proxy {
+    string host,
+    i32 port,
+    string type,
+    i32 latency
+}
+
+@url(/proxies)
+func list<Proxy> getProxies(i32 limit);

@@ -1,0 +1,36 @@
+namespace java me.shenfeng.db
+
+struct Proxy {
+    i32 id,
+    string host,
+    i32 port,
+    string proxyType,
+    i32 status,
+    i32 latency,
+    i32 okCnt,
+    i32 failCnt,
+    string source,
+    string sourceDomain,
+    datetime createdAt,
+    datetime lastCheck,
+}
+
+func list<Proxy> loadAllProxies(i64 since) {
+    select * from proxies where proxy_type = 'http' and last_check < :since
+}
+
+func list<Proxy> loadValidProxies(i32 limit) {
+    select * from proxies where status = 1 order by latency limit :limit
+}
+
+func Proxy findProxy(string host, i32 port) {
+    select * from proxies where host = :host and port = :port
+}
+
+func void updateProxy(i32 id, i32 lastcheck, i32 status, i32 ok, i32 fail, i64 latency) {
+    update proxies set status = :status, last_check = :lastcheck, ok_cnt = :ok, fail_cnt = :fail, latency = :latency where id = :id
+}
+
+func i32 insertProxy(Proxy p) {
+    insert into proxies (host, port, proxy_type, source, source_domain) values (:p.host, :p.port, :p.proxyType, :p.source, :p.sourceDomain)
+}
