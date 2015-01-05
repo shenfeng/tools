@@ -36,7 +36,6 @@ public class ApiServer {
                 if (Dispatcher.dispatch(request, response, h)) {
                     baseRequest.setHandled(true);
                 }
-
             }
         });
 

@@ -1,5 +1,6 @@
-package me.shenfeng;
+package me.shenfeng.proxy;
 
+import me.shenfeng.Utils;
 import me.shenfeng.db.DBApi;
 import me.shenfeng.db.Proxy;
 import org.apache.http.HttpHost;
