@@ -1,11 +1,11 @@
 package me.shenfeng;
 
+import gen.api.Dispatcher;
 import me.shenfeng.api.ApiHandler;
-import me.shenfeng.api.Dispatcher;
-import org.apache.commons.dbcp.BasicDataSource;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.kohsuke.args4j.Option;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -15,20 +15,20 @@ import java.io.IOException;
 /**
  * Created by feng on 1/4/15.
  */
-public class ApiServer {
+public class ApiServer extends MainBase {
+
+    @Option(name = "-port", usage = "Port to listen to")
+    protected int port = 9091;
 
 
     public static void main(String[] args) throws Exception {
-        Server server = new Server(7000);
+        new ApiServer().parseArgsAndRun(args);
+    }
 
-
-        BasicDataSource db = new BasicDataSource();
-        db.setUrl("jdbc:mysql://192.168.1.251:3306/tools");
-        db.setUsername("root");
-        db.setPassword("");
-
-
-        final ApiHandler h = new ApiHandler(db);
+    @Override
+    public void run() throws Exception {
+        Server server = new Server(this.port);
+        final ApiHandler h = new ApiHandler(Utils.getDataSource(this.db));
 
         server.setHandler(new AbstractHandler() {
             @Override
@@ -39,9 +39,7 @@ public class ApiServer {
             }
         });
 
-
         server.start();
         server.join();
-
     }
 }

@@ -1,4 +1,4 @@
-namespace java me.shenfeng.db
+namespace java gen.db
 
 struct Proxy {
     i32 id,
@@ -16,7 +16,7 @@ struct Proxy {
 }
 
 func list<Proxy> loadAllProxies(i64 since) {
-    select * from proxies where proxy_type = 'http' and last_check < :since
+    select * from proxies where proxy_type = 'http' and last_check < :since order by last_check
 }
 
 func list<Proxy> loadValidProxies(i32 limit) {
@@ -31,6 +31,6 @@ func void updateProxy(i32 id, i32 lastcheck, i32 status, i32 ok, i32 fail, i64 l
     update proxies set status = :status, last_check = :lastcheck, ok_cnt = :ok, fail_cnt = :fail, latency = :latency where id = :id
 }
 
-func i32 insertProxy(Proxy p) {
-    insert into proxies (host, port, proxy_type, source, source_domain) values (:p.host, :p.port, :p.proxyType, :p.source, :p.sourceDomain)
+func i32 saveProxy(string host, i32 port, string type, string source, string domain) {
+    insert into proxies (host, port, proxy_type, source, source_domain) values (:host, :port, :type, :source, :domain)
 }

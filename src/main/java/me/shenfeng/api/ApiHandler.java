@@ -1,8 +1,12 @@
 package me.shenfeng.api;
 
-import me.shenfeng.db.DBApi;
-import org.apache.commons.dbcp.BasicDataSource;
 
+import gen.api.Context;
+import gen.api.IHandler;
+import gen.api.Proxy;
+import gen.db.DBApi;
+
+import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,9 +16,9 @@ import java.util.List;
  */
 public class ApiHandler implements IHandler {
 
-    private final BasicDataSource db;
+    private final DataSource db;
 
-    public ApiHandler(BasicDataSource db) {
+    public ApiHandler(DataSource db) {
         this.db = db;
     }
 
@@ -34,9 +38,9 @@ public class ApiHandler implements IHandler {
         List<Proxy> ret = new ArrayList<>();
 
         try {
-            List<me.shenfeng.db.Proxy> proxies = DBApi.loadValidProxies(this.db, limit <= 0 ? 100 : limit);
+            List<gen.db.Proxy> proxies = DBApi.loadValidProxies(this.db, limit <= 0 ? 100 : limit);
 
-            for (me.shenfeng.db.Proxy proxy : proxies) {
+            for (gen.db.Proxy proxy : proxies) {
                 ret.add(new Proxy(proxy.host, proxy.port, proxy.proxyType, proxy.latency));
             }
 

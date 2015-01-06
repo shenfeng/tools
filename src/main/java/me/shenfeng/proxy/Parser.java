@@ -1,6 +1,6 @@
 package me.shenfeng.proxy;
 
-import me.shenfeng.db.Proxy;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -14,13 +14,13 @@ import java.util.List;
  * Created by feng on 1/5/15.
  */
 public abstract class Parser {
-    public abstract List<Proxy> parse(String url, String html);
+    public abstract List<FetchedProxy> parse(String url, String html);
 
-    public static List<Proxy> p(String url, String html) {
+    public static List<FetchedProxy> p(String url, String html) {
         List<Parser> parsers = new ArrayList<>();
         parsers.add(new ProxyCom());
         for (Parser p : parsers) {
-            List<Proxy> r = p.parse(url, html);
+            List<FetchedProxy> r = p.parse(url, html);
             if (r != null) {
                 return r;
             }
@@ -29,15 +29,13 @@ public abstract class Parser {
     }
 
     public static class ProxyCom extends Parser {
-
         @Override
-        public List<Proxy> parse(String url, String html) {
+        public List<FetchedProxy> parse(String url, String html) {
             if (!url.contains("www.proxy.com.ru")) {
                 return null;
             }
 
-            List<Proxy> proxies = new ArrayList<>();
-
+            List<FetchedProxy> proxies = new ArrayList<>();
             String domain = URI.create(url).getHost();
 
             Document d = Jsoup.parse(html, url);
@@ -47,7 +45,7 @@ public abstract class Parser {
                     String host = tds.get(1).text();
                     if (host.contains(".")) {
                         int port = Integer.parseInt(tds.get(2).text());
-                        proxies.add(new Proxy(0, host, port, "http", 0, 0, 0, 0, url, domain, null, null));
+                        proxies.add(new FetchedProxy(host, port, "http", url, domain));
                     }
                 }
             }

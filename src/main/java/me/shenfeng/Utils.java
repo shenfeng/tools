@@ -2,12 +2,14 @@ package me.shenfeng;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import me.shenfeng.api.Proxy;
-import me.shenfeng.download.Downloader;
+import gen.api.Proxy;
+import me.shenfeng.proxy.Crawler;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
 
 import javax.sql.DataSource;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static java.lang.Math.min;
+
 
 /**
  * Created by feng on 1/4/15.
@@ -123,31 +126,33 @@ public class Utils {
         return new String(bytes, 0, bytes.length, detectCharset(resp, bytes));
     }
 
-    public static ConcurrentLinkedQueue<HttpHost> loadProxies(String file) {
-        InputStream is = null;
+    public static ConcurrentLinkedQueue<HttpHost> loadProxies(String path) {
+        Type type = new TypeToken<List<Proxy>>() {
+        }.getType();
+
+        List<Proxy> proxies = null;
         try {
-            // first try file, then try in classpath
-            if (new File(file).exists()) {
-                is = new FileInputStream(file);
-            } else {
-                is = Utils.class.getClassLoader().getResourceAsStream(file);
+            String json = Crawler.fetchPage(path);
+            if (json != null) {
+                proxies = new Gson().fromJson(json, type);
             }
-
-            Type type = new TypeToken<List<Proxy>>() {
-            }.getType();
-
-            List<Proxy> proxies = new Gson().fromJson(new InputStreamReader(is), type);
-            Collections.shuffle(proxies);
-            ConcurrentLinkedQueue<HttpHost> r = new ConcurrentLinkedQueue<>();
-            for (Proxy p : proxies) {
-                r.add(new HttpHost(p.host, p.port));
-            }
-            return r;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            Utils.closeQuietly(is);
+        } catch (IOException ignore) {
         }
+
+        if (proxies == null) {
+            try (InputStream is = Utils.class.getClassLoader().getResourceAsStream(path)) {
+                proxies = new Gson().fromJson(new InputStreamReader(is), type);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        Collections.shuffle(proxies);
+        ConcurrentLinkedQueue<HttpHost> r = new ConcurrentLinkedQueue<>();
+        for (Proxy p : proxies) {
+            r.add(new HttpHost(p.host, p.port));
+        }
+        return r;
     }
 
     public static List<String> readLines(String f) throws IOException {
@@ -181,5 +186,28 @@ public class Utils {
 
         throw new RuntimeException("not found " + r);
 
+    }
+
+    public final static String USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.114 Safari/537.36";
+
+    public static HttpGet get(String url, HttpHost proxy, String refer) {
+        HttpGet get = new HttpGet(url);
+        RequestConfig.Builder config = RequestConfig.custom().setSocketTimeout(40000).
+                setConnectTimeout(15000).setRedirectsEnabled(false);
+        if (proxy != null) {
+            config.setProxy(proxy);
+        }
+        get.setConfig(config.build());
+        get.setHeader("Accept", "textml,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+        get.setHeader("User-Agent", Utils.USER_AGENT);
+        get.setHeader("Accept-Language", "zh-cn,zh;q=0.5");
+        get.setHeader("Connection", "keep-alive");
+        get.setHeader("Accept-Encoding", "gzip");
+        get.setHeader("Proxy-Connection", "keep-alive");
+        if (refer == null)
+            get.setHeader("Referer", "http://www.baidu.com/");
+        else
+            get.setHeader("Referer", refer);
+        return get;
     }
 }

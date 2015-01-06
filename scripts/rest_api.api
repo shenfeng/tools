@@ -1,4 +1,4 @@
-ns me.shenfeng.api
+ns gen.api
 
 
 struct Proxy {

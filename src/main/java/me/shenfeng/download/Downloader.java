@@ -1,17 +1,14 @@
 package me.shenfeng.download;
 
 import com.google.gson.Gson;
+import me.shenfeng.MainBase;
 import me.shenfeng.Utils;
 import org.apache.http.HttpHost;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +17,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,26 +28,23 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Created by feng on 1/5/15.
  */
-public class Downloader {
-    @Option(name = "-h", usage = "Print help and exits")
-    private boolean help = false;
-
+public class Downloader extends MainBase {
     @Option(name = "-threads", usage = "How many threads")
-    private int threads = 10;
+    protected int threads = 10;
 
-    private final int JOB_PER_PROXY = 3;
+    protected final int JOB_PER_PROXY = 3;
 
     @Option(name = "-in", usage = "Urls to download")
-    private String in = "/tmp/dajie_urls";
+    protected String in = "/tmp/dajie_urls";
 
     @Option(name = "-dir", usage = "Destination dir")
-    private String dir = "/tmp/dajie_out";
+    protected String dir = "/tmp/dajie_out";
 
     @Option(name = "-proxies", usage = "proxies file")
-    private String proxyFile = "proxies";
+    protected String proxy = "http://66.175.220.99/api/proxies?limit=2200";
 
     @Option(name = "-check", usage = "Validation check word")
-    private String check = "大街网";
+    protected String check = "大街网";
 
     private static final Logger logger = LoggerFactory.getLogger(Downloader.class);
     private FileOutputStream doneFile;
@@ -63,26 +56,12 @@ public class Downloader {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Downloader main = new Downloader();
-        CmdLineParser parser = new CmdLineParser(main);
-        parser.setUsageWidth(120);
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            e.printStackTrace();
-        }
-
-        if (main.help) {
-            System.err.println("java {{cp}} " + Downloader.class.getCanonicalName() + " [options...] arguments...");
-            parser.printUsage(System.err);
-            System.exit(1);
-        } else {
-            main.run();
-        }
+        main.parseArgsAndRun(args);
     }
 
-    private ConcurrentLinkedQueue<Job> candidates = new ConcurrentLinkedQueue<>();
+    private final LinkedList<Job> candidates = new LinkedList<>();
 
-    private void run() throws IOException, InterruptedException {
+    public void run() throws Exception {
         if (!new File(in).exists()) {
             throw new RuntimeException(in + " not exits");
         }
@@ -103,7 +82,7 @@ public class Downloader {
                 candidates.add(new Job(s));
         }
 
-        this.proxies = Utils.loadProxies(this.proxyFile);
+        this.proxies = Utils.loadProxies(this.proxy);
         this.doneFile = new FileOutputStream(dir + "/done", true);
         this.datas = new FileOutputStream(dir + "/datas", true);
 
@@ -128,23 +107,8 @@ public class Downloader {
 
         public boolean fetch(CloseableHttpClient client, HttpHost proxy) {
             long start = System.currentTimeMillis();
-            HttpGet get = new HttpGet(url);
-            RequestConfig.Builder config = RequestConfig.custom().setSocketTimeout(80000).
-                    setConnectTimeout(15000).setRedirectsEnabled(false);
-            if (proxy != null) {
-                config.setProxy(proxy);
-            }
-            get.setConfig(config.build());
-            get.setHeader("Accept", "textml,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-            get.setHeader("User-Agent", USER_AGENT);
-            get.setHeader("Accept-Language", "zh-cn,zh;q=0.5");
-            get.setHeader("Connection", "keep-alive");
-            get.setHeader("Accept-Encoding", "gzip");
-            get.setHeader("Proxy-Connection", "keep-alive");
-            get.setHeader("Referer", "http://www.baidu.com/");
-
             try {
-                CloseableHttpResponse resp = client.execute(get);
+                CloseableHttpResponse resp = client.execute(Utils.get(url, proxy, "http://www.baid.com"));
                 this.status = resp.getStatusLine().getStatusCode();
                 if (status == 200) {
                     String body = Utils.toString(resp);
@@ -183,8 +147,6 @@ public class Downloader {
         }
     }
 
-    final static String USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.114 Safari/537.36";
-
     class URLWorker implements Runnable {
         CloseableHttpClient client = HttpClientBuilder.create().build();
         HttpHost proxy = proxies.poll();
@@ -193,7 +155,10 @@ public class Downloader {
         @Override
         public void run() {
             while (true) {
-                Job job = candidates.poll();
+                Job job;
+                synchronized (candidates) {
+                    job = candidates.poll();
+                }
                 if (job == null) {
                     logger.info("done");
                     return;

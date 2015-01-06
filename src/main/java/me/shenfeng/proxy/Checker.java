@@ -1,8 +1,8 @@
 package me.shenfeng.proxy;
 
+import gen.db.DBApi;
+import me.shenfeng.MainBase;
 import me.shenfeng.Utils;
-import me.shenfeng.db.DBApi;
-import me.shenfeng.db.Proxy;
 import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -10,14 +10,11 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -30,47 +27,28 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Created by feng on 11/8/14.
  */
-public class ProxyCheck {
-    @Option(name = "-h", usage = "Print help and exits")
-    private boolean help = false;
+public class Checker extends MainBase {
 
     @Option(name = "-threads", usage = "How many threads")
-    private int threads = 100;
+    protected int threads = 30;
 
     @Option(name = "-timeout", usage = "Timeout in seconds")
-    private int timeout = 13;
+    protected int timeout = 13;
 
-    @Option(name = "-db", usage = "Kanzhun database url")
-    protected String db = "root@|jdbc:mysql://192.168.1.251:3306/tools";
+    private static final Logger logger = LoggerFactory.getLogger(Checker.class);
 
-    private static final Logger logger = LoggerFactory.getLogger(ProxyCheck.class);
-
-    public static void main(String[] args) throws InterruptedException, FileNotFoundException, SQLException {
-        ProxyCheck main = new ProxyCheck();
-        CmdLineParser parser = new CmdLineParser(main);
-        parser.setUsageWidth(120);
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            e.printStackTrace();
-        }
-
-        if (main.help) {
-            System.err.println("java {{cp}} " + ProxyCheck.class.getCanonicalName() + " [options...] arguments...");
-            parser.printUsage(System.err);
-            System.exit(1);
-        } else {
-            main.run();
-        }
+    public static void main(String[] args) throws Exception {
+        Checker main = new Checker();
+        main.parseArgsAndRun(args);
     }
 
     private static final int OK = 1;
     private static final int FAIL = 0;
 
-    private void run() throws FileNotFoundException, InterruptedException, SQLException {
+    public void run() throws Exception {
         final DataSource ds = Utils.getDataSource(this.db);
         // last 8 hours
-        final List<Proxy> proxies = DBApi.loadAllProxies(ds, System.currentTimeMillis() / 1000 - 3600 * 8);
+        final List<gen.db.Proxy> proxies = DBApi.loadAllProxies(ds, System.currentTimeMillis() / 1000 - 3600 * 36);
         logger.info("load {} proxies, timeout: {}s, thread: {}", proxies.size(), timeout, threads);
         ExecutorService service = Executors.newFixedThreadPool(threads);
 
@@ -79,7 +57,7 @@ public class ProxyCheck {
         final AtomicInteger error = new AtomicInteger(0);
         final AtomicInteger fail = new AtomicInteger(0);
 
-        for (final Proxy p : proxies) {
+        for (final gen.db.Proxy p : proxies) {
             service.submit(new Runnable() {
                 @Override
                 public void run() {
