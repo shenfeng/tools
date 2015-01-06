@@ -18,4 +18,12 @@ public class ParserTest {
         List<FetchedProxy> r = Parser.p(url, html);
         Assert.assertEquals(50, r.size());
     }
+
+    @Test
+    public void testFreeProxyList() {
+        String url = "http://free-proxy-list.net/";
+        String html = Utils.getResource("proxies/free_proxy_list_net.html");
+        List<FetchedProxy> r = Parser.p(url, html);
+        Assert.assertEquals(300, r.size());
+    }
 }

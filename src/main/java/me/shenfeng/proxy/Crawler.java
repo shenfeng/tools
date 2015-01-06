@@ -26,6 +26,7 @@ public class Crawler extends MainBase {
         for (int i = 0; i < 50; i++) {
             seeds.add(String.format("http://www.proxy.com.ru/list_%d.html", i + 1));
         }
+        seeds.add("http://free-proxy-list.net/");
 
         int totalSaved = 0;
 
