@@ -14,6 +14,7 @@ import javax.sql.DataSource;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -150,7 +151,7 @@ public class Utils {
     }
 
     public static List<String> readLines(String f) throws IOException {
-        try(BufferedReader reader = new BufferedReader(new FileReader(f))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(f))) {
             List<String> list = new ArrayList<String>();
             String line = reader.readLine();
             while (line != null) {
@@ -159,5 +160,26 @@ public class Utils {
             }
             return list;
         }
+    }
+
+    public static String getResource(String r) {
+        InputStream in = Utils.class.getClassLoader().getResourceAsStream(r);
+        try {
+            if (in != null) {
+                byte[] buffer = new byte[8912];
+                int read;
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                while ((read = in.read(buffer)) >= 0) {
+                    bos.write(buffer, 0, read);
+                }
+                in.close();
+                return new String(bos.toByteArray(), StandardCharsets.UTF_8);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        throw new RuntimeException("not found " + r);
+
     }
 }
