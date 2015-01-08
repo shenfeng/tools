@@ -48,7 +48,7 @@ public class Checker extends MainBase {
     public void run() throws Exception {
         final DataSource ds = Utils.getDataSource(this.db);
         // last 8 hours
-        final List<gen.db.Proxy> proxies = DBApi.loadAllProxies(ds, System.currentTimeMillis() / 1000 - 3600 * 36);
+        final List<gen.db.Proxy> proxies = DBApi.loadAllProxies(ds, System.currentTimeMillis() / 1000 - 3600 * 30);
         logger.info("load {} proxies, timeout: {}s, thread: {}", proxies.size(), timeout, threads);
         ExecutorService service = Executors.newFixedThreadPool(threads);
 
