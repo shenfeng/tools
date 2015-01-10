@@ -3,6 +3,7 @@ package me.shenfeng.download;
 import com.google.gson.Gson;
 import me.shenfeng.MainBase;
 import me.shenfeng.Utils;
+import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -41,10 +42,13 @@ public class Downloader extends MainBase {
     protected String dir = "/tmp/dajie_out";
 
     @Option(name = "-proxies", usage = "proxies file")
-    protected String proxy = "http://66.175.220.99/api/proxies?limit=2200";
+    protected String proxy = "http://66.175.220.99/api/proxies?limit=3500";
 
     @Option(name = "-check", usage = "Validation check word")
     protected String check = "大街网";
+
+    @Option(name = "-error", usage = "Validation check word")
+    protected String error = "";
 
     private static final Logger logger = LoggerFactory.getLogger(Downloader.class);
     private FileOutputStream doneFile;
@@ -96,7 +100,7 @@ public class Downloader extends MainBase {
         service.awaitTermination(10, TimeUnit.DAYS);
     }
 
-    class Job {
+    public class Job {
         final String url;
         String html;
         int status;
@@ -117,7 +121,7 @@ public class Downloader extends MainBase {
                         return false;
                     }
                     Document d = Jsoup.parse(body, url);
-                    d.select("script, style, link").remove();
+                    d.select("style, link").remove();
                     this.html = d.toString();
 
                     logger.info("done {}, {}/{} chars, takes {}ms, proxy: {}",
@@ -125,7 +129,14 @@ public class Downloader extends MainBase {
                     return true;
                 } else {
                     resp.close();
-                    logger.warn("status: {}, url: {}", status, url);
+                    Header[] location = resp.getHeaders("Location");
+                    String l = location.length > 0 ? location[0].getValue() : "";
+
+                    logger.warn("status: {}, url: {} => {}", status, url, l);
+                    if (!error.isEmpty() && l.contains("verify.baidu")) {
+                        return false;
+                    }
+
                     // redirect, should follow
                     return status >= 300 && status <= 400;
                 }

@@ -26,4 +26,9 @@ public class ParserTest {
         List<FetchedProxy> r = Parser.p(url, html);
         Assert.assertEquals(300, r.size());
     }
+
+    @Test
+    public void testEnd() {
+
+    }
 }
