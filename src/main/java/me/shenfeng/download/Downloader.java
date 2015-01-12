@@ -42,13 +42,16 @@ public class Downloader extends MainBase {
     protected String dir = "/tmp/dajie_out";
 
     @Option(name = "-proxies", usage = "proxies file")
-    protected String proxy = "http://66.175.220.99/api/proxies?limit=3500";
+    protected String proxy = "http://66.175.220.99/api/proxies?limit=5500";
 
     @Option(name = "-check", usage = "Validation check word")
     protected String check = "大街网";
 
     @Option(name = "-error", usage = "Validation check word")
     protected String error = "";
+
+    @Option(name = "-refer", usage = "Refer")
+    protected String refer = "http://www.baid.com";
 
     private static final Logger logger = LoggerFactory.getLogger(Downloader.class);
     private FileOutputStream doneFile;
@@ -112,7 +115,7 @@ public class Downloader extends MainBase {
         public boolean fetch(CloseableHttpClient client, HttpHost proxy) {
             long start = System.currentTimeMillis();
             try {
-                CloseableHttpResponse resp = client.execute(Utils.get(url, proxy, "http://www.baid.com"));
+                CloseableHttpResponse resp = client.execute(Utils.get(url, proxy, refer));
                 this.status = resp.getStatusLine().getStatusCode();
                 if (status == 200) {
                     String body = Utils.toString(resp);
@@ -120,9 +123,14 @@ public class Downloader extends MainBase {
                         logger.info("check failed, {}, {} chars", url, check);
                         return false;
                     }
-                    Document d = Jsoup.parse(body, url);
-                    d.select("style, link").remove();
-                    this.html = d.toString();
+                    Header[] t = resp.getHeaders("Content-Type");
+                    if (t.length > 0 && t[0].getValue().toLowerCase().contains("html")) {
+                        Document d = Jsoup.parse(body, url);
+                        d.select("style, link").remove();
+                        this.html = d.toString();
+                    } else {
+                        this.html = body;
+                    }
 
                     logger.info("done {}, {}/{} chars, takes {}ms, proxy: {}",
                             url, body.length(), html.length(), System.currentTimeMillis() - start, proxy);
