@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Created by feng on 1/5/15.
  */
-public class ParserTest {
+public class ProxyParserTest {
 
     @Test
     public void testParseProxyComRu() {

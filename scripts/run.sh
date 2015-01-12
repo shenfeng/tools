@@ -36,8 +36,9 @@ while test $# -ne 0; do
         -h|--help) usage; exit;;
         checker) run me.shenfeng.proxy.Checker $@; exit;;
         crawler) run me.shenfeng.proxy.Crawler $@ ; exit;;
-        server) run me.shenfeng.ApiServer $@ ; exit;;
-        downloader) run me.shenfeng.download.Downloader $@; exit;;
+        s|server) run me.shenfeng.ApiServer $@ ; exit;;
+        d|downloader) run me.shenfeng.download.Downloader $@; exit;;
+        r|run) run $@; exit;;
         *) usage; exit;;
     esac
 done

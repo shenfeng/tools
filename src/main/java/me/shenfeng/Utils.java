@@ -15,12 +15,13 @@ import org.apache.http.util.EntityUtils;
 import javax.sql.DataSource;
 import java.io.*;
 import java.lang.reflect.Type;
+import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.lang.Math.min;
 
@@ -56,6 +57,37 @@ public class Utils {
         bs.setPassword(tmp[0].substring(idx + 1));
 
         return bs;
+    }
+
+    public static Map<String, String> parseQueryString(String s) {
+        Map<String, String> r = new HashMap<>();
+
+        if (s != null && s.length() > 0) {
+            for (String p : s.split("&")) {
+                int idx = p.indexOf("=");
+//                String[] k = p.split("=");
+                if (idx > 0) {
+                    try {
+                        String k = p.substring(0, idx);
+                        String v = p.substring(idx + 1);
+                        r.put(URLDecoder.decode(k, "utf8"), URLDecoder.decode(v, "utf8"));
+                    } catch (UnsupportedEncodingException e) {
+                    }
+                }
+            }
+        }
+
+        return r;
+    }
+
+    static Pattern NUMBER = Pattern.compile("\\d+");
+
+    public static int getInt(String s) {
+        Matcher n = NUMBER.matcher(s);
+        if (n.find()) {
+            return Integer.parseInt(n.group());
+        }
+        return 0;
     }
 
     public static void closeQuietly(Closeable c) {

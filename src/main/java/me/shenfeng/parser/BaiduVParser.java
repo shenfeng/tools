@@ -2,17 +2,11 @@ package me.shenfeng.parser;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import me.shenfeng.MainBase;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.kohsuke.args4j.Option;
 
-import java.io.BufferedReader;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,15 +17,9 @@ import java.util.regex.Pattern;
 /**
  * Created by feng on 1/10/15.
  */
-public class BaiduVParser extends MainBase {
+public class BaiduVParser extends ParseBase {
 
-//    java -cp "/home/ubuntu/tools/tools-1.0.jar:/home/ubuntu/tools/lib/*" me.shenfeng.parser.BaiduVParser -in datas -out json
-    @Option(name = "-in", usage = "Input File")
-    protected String in = "";
-
-    @Option(name = "-out", usage = "Output File")
-    protected String out = "";
-
+    // //    java -cp "/home/ubuntu/tools/tools-1.0.jar:/home/ubuntu/tools/lib/*" me.shenfeng.parser.BaiduVParser -in datas -out json
 
     public static class Domain {
         public String siteName;
@@ -144,38 +132,5 @@ public class BaiduVParser extends MainBase {
 
     public static void main(String[] args) {
         new BaiduVParser().parseArgsAndRun(args);
-    }
-
-    public static class Job {
-        public String url;
-        public String html;
-        public int status;
-    }
-
-    @Override
-    public void run() throws Exception {
-        Gson gson = new Gson();
-        int total = 0, has = 0;
-        if (this.in.length() > 0 && this.out.length() > 0) {
-            FileOutputStream fos = new FileOutputStream(this.out);
-            try (BufferedReader br = new BufferedReader(new FileReader(this.in))) {
-                String line = null;
-                while ((line = br.readLine()) != null) {
-                    total += 1;
-                    Job j = gson.fromJson(line, Job.class);
-                    if (j.status != 200 || j.html == null || j.html.length() < 10) {
-                        continue;
-                    }
-                    BaiduV r = new BaiduVParser().parse(j.url, j.html);
-                    if (r == null) {
-                        continue;
-                    }
-                    has += 1;
-                    fos.write((new Gson().toJson(r) + "\n").getBytes(StandardCharsets.UTF_8));
-                }
-            }
-            fos.close();
-            System.out.printf("%d/%d\n", has, total);
-        }
     }
 }
