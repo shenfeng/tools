@@ -56,6 +56,43 @@ public class Utils {
         return bs;
     }
 
+    // support escape
+    public static String[] split(String s, char sep) {
+        List<String> r = new ArrayList<>();
+
+        StringBuilder sb = new StringBuilder();
+        boolean escape = false;
+
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (escape) {
+                sb.append(c);
+            } else {
+                if (c == sep) {
+                    r.add(sb.toString());
+                    sb.setLength(0);
+                } else if (c == '\\' && s.charAt(i + 1) == sep) {
+                    escape = true;
+                    continue;
+                } else {
+                    sb.append(c);
+                }
+            }
+
+            escape = false;
+        }
+
+        if (sb.length() > 0) {
+            r.add(sb.toString());
+        }
+
+        return r.toArray(new String[r.size()]);
+    }
+
+    public static boolean isEmpty(String s) {
+        return s == null || s.length() == 0;
+    }
+
     public static Map<String, String> parseQueryString(String s) {
         Map<String, String> r = new HashMap<>();
 

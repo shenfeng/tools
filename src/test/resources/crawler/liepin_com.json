@@ -1,7 +1,7 @@
 {
   "seed": "http://company.liepin.com/so/?pagesize=30&keywords=&dq=${dq}&industry=${industry}&e_kind=000",
   "list": {
-    "selector": ".jobs-list dl",
+    "selectors": [".jobs-list dl"],
     "data": [
       {
         "name": "url",
@@ -10,24 +10,58 @@
       }
     ]
   },
-  "pager": ".pagerbar a",
-  "detail": [
-    {
-      "name": "company",
-      "selector": "h2",
-      "value": "text"
-    },
-    {
-      "name": "logo",
-      "selector": ".elogo img",
-      "value": "attr:src"
-    },
-    {
-      "name": "address",
-      "selector": ".company-address",
-      "value": "text"
-    }
-  ],
+  "pager": [".pagerbar a"],
+  "detail": {
+    "selectors": [],
+    "data": [
+      {
+        "name": "company",
+        "selector": "h2",
+        "value": "text"
+      },
+      {
+        "name": "logo",
+        "selector": ".elogo img",
+        "value": "attr:src"
+      },
+      {
+        "name": "address",
+        "selector": ".company-address",
+        "value": "text"
+      },
+      {
+        "name": "size",
+        "selector": ".intro-head .e-menu li:contains(规模)",
+        // "text|split:\\::1"
+        "value": "text|split:：:1"
+      },
+      {
+        "name": "nature",
+        "selector": ".intro-head .e-menu li:contains(性质)",
+        "value": "text|split:：:1"
+      },
+      {
+        "name": "city",
+        "selector": ".intro-head .e-menu li:contains(所在地)",
+        "value": "text|split:：:1"
+      },
+      {
+        "name": "description",
+        "selector": ".intro-main",
+        "value": "html"
+      },
+      {
+        "name": "pics",
+        "selector": ".slider-list .thumb img",
+        "value": "attr:src"
+      },
+      {
+        "name": "tags",
+        "selector": ".tag-list .tag",
+        "value": "text"
+      }
+    ]
+  },
   "check": "猎聘网",
   "params": {
     "dq": {

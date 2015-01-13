@@ -98,10 +98,10 @@ def parse_result():
 
     def write(c):
         # print c
-        s = ('\t'.join([str(s) if type(s) in (int,) else s for s in c]) + '\n').encode('utf8')
+        s = ('\t'.join([str(s) if type(s) in (int,) else s.strip() for s in c]) + '\n').encode('utf8')
         out.write(s)
 
-    keys = ['sitename', 'showurl', 'comtcount', 'showpraise', 'comtcount']
+    keys = ['sitename', 'showurl', 'comtcount', 'showpraise', 'jumpurl']
 
     write(keys + ['group', 'tag'])
 
@@ -134,3 +134,14 @@ if __name__ == '__main__':
     # gen_download_urls()
     pass
 # download_list()
+
+import json, re
+
+
+def extract_page_key():
+    for line in open('/data/tools/koubei_detail/datas'):
+        d = json.loads(line)
+        if 'html' in d:
+            m = re.search('data-key="(\d+)"')
+            if m:
+                print m.group(1)

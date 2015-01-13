@@ -1,19 +1,24 @@
 package sf.download.handler;
 
-import cn.techwolf.util.Utils;
-import cn.techwolf.value.Value;
+
 import org.jsoup.nodes.Element;
-import org.reflections.Reflections;
+import sf.Utils;
+import sf.download.value.*;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * Created by feng on 8/21/14.
  */
 public class Field {
-    private static Class<? extends Value>[] classes;
+    private static List<Class<? extends Value>> classes = Arrays.asList(
+            AttrValue.class, ConcatValue.class, DateTsValue.class,
+            HtmlValue.class, IdentityValue.class, JsonAttrValue.class,
+            RegexValue.class, SplitValue.class, TextValue.class
+    );
     // 名字，比如title， url， kind
     public String name;
     // jquery selector
@@ -39,6 +44,11 @@ public class Field {
 
     public Object get(Object e) {
         setIfNeeded();
+
+//        Elements es = e.select(selector);
+//        Object ret = es;
+//
+
         if (e instanceof Element) {
             Object input = ((Element) e).select(selector);
             for (Value v : vs) {
@@ -54,16 +64,9 @@ public class Field {
     }
 
     private void setIfNeeded() {
-        if (classes == null) { // this is slow, cache it
-            Reflections reflections = new Reflections("cn.techwolf.value");
-            List<Class<? extends Value>> vs = new ArrayList<>(reflections.getSubTypesOf(Value.class));
-            classes = vs.toArray(new Class[vs.size()]);
-        }
-
         if (vs != null) {
             return;
         }
-
 
         // attr:href|regex:\d+
         String[] values = Utils.split(value, '|');
@@ -89,6 +92,7 @@ public class Field {
                             cTypes[i] = String.class;
                         }
                         Constructor<? extends Value> c = t.getConstructor(cTypes);
+
                         String[] cArgs = new String[cTypes.length];
                         System.arraycopy(inputArgs, 1, cArgs, 0, inputArgs.length - 1);
                         vList.add(c.newInstance(cArgs));

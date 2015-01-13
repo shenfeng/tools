@@ -10,10 +10,12 @@ import java.util.Map;
  * Created by feng on 8/23/14.
  */
 public class SplitValue implements Value {
-    private final String seperator;
+    private final String sep;
+    private final int f;
 
-    public SplitValue(String seperator) {
-        this.seperator = seperator;
+    public SplitValue(String sep, String f) {
+        this.sep = sep;
+        this.f = Integer.parseInt(f);
     }
 
     /**
@@ -31,13 +33,18 @@ public class SplitValue implements Value {
             Map<String, String> m = new HashMap<>();
             for (Element ele : es) {
                 String txt = ele.text();
-                String[] parts = txt.split(seperator);
+                String[] parts = txt.split(sep);
                 if (parts.length == 2) {
                     m.put(parts[0], parts[1]);
                 }
             }
             if (m.size() > 0) {
                 return m;
+            }
+        } else if (e instanceof String) {
+            String[] parts = ((String) e).split(sep);
+            if (parts.length > f) {
+                return parts[f];
             }
         }
 
