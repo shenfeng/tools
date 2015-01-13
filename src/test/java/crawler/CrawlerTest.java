@@ -19,8 +19,9 @@ public class CrawlerTest {
     @Test
     public void testCrawler58() {
         Config cfg = new Gson().fromJson(Utils.getResource("crawler/liepin_com.json"), Config.class);
-        BaseHandler h = new BaseHandler(cfg);
+        Assert.assertEquals(40 * 52, cfg.getSeeds().size());
 
+        BaseHandler h = new BaseHandler(cfg);
         ListData l = h.OnListPage("http://company.liepin.com/so/?pagesize=20&keywords=&dq=010&industry=000&e_kind=000",
                 Utils.getResource("crawler/liepin_com_list.html"));
 
@@ -42,6 +43,6 @@ public class CrawlerTest {
                 Utils.getResource("crawler/liepin_com_detail2.html"));
 
         Assert.assertEquals(3, ((List) d.get("pics")).size());
-        Assert.assertEquals(((List)d.get("tags")).size(), 13);
+        Assert.assertEquals(((List) d.get("tags")).size(), 13);
     }
 }

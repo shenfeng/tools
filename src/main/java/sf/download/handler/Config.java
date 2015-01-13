@@ -1,9 +1,7 @@
 package sf.download.handler;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by feng on 1/13/15.
@@ -30,6 +28,38 @@ public class Config {
     public boolean proxy = true; // default to true
     // 如果有 timestamp，多久以后的会被抛弃掉
     public int maxdays = 0;
+
+    public Set<String> getSeeds() {
+        Set<String> seeds = new HashSet<>();
+        if (params == null) {
+            seeds.add(seed);
+        } else {
+            collect(new LinkedList<>(params.entrySet()), seed, seeds);
+        }
+
+        return seeds;
+    }
+
+
+    private void collect(LinkedList<Map.Entry<String, Map<String, String>>> ps, String templates, Set<String> c) {
+        if (ps.isEmpty()) {
+            return;
+        }
+
+        boolean collect = ps.size() == 1;
+        Iterator<Map.Entry<String, Map<String, String>>> it = ps.iterator();
+        Map.Entry<String, Map<String, String>> item = it.next();
+        it.remove();
+        String r = "${" + item.getKey() + "}";
+        for (String s : item.getValue().keySet()) {
+            String tmpl = templates.replace(r, s);
+            if (collect) {
+                c.add(tmpl);
+            } else {
+                collect(new LinkedList<Map.Entry<String, Map<String, String>>>(ps), tmpl, c); // recursive
+            }
+        }
+    }
 
 
     public String minDate;
