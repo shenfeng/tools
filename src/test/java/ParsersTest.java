@@ -1,7 +1,7 @@
-import me.shenfeng.Utils;
-import me.shenfeng.parser.BaiduParser;
-import me.shenfeng.parser.BaiduVParser;
-import me.shenfeng.parser.DajieParser;
+import sf.Utils;
+import sf.parser.BaiduParser;
+import sf.parser.BaiduVParser;
+import sf.parser.DajieParser;
 import org.junit.Assert;
 import org.junit.Test;
 

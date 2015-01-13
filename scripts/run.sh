@@ -34,10 +34,10 @@ while test $# -ne 0; do
     arg=$1; shift
     case ${arg} in
         -h|--help) usage; exit;;
-        checker) run me.shenfeng.proxy.Checker $@; exit;;
-        crawler) run me.shenfeng.proxy.Crawler $@ ; exit;;
-        s|server) run me.shenfeng.ApiServer $@ ; exit;;
-        d|downloader) run me.shenfeng.download.Downloader $@; exit;;
+        checker) run sf.proxy.Checker $@; exit;;
+        crawler) run sf.proxy.Crawler $@ ; exit;;
+        s|server) run sf.ApiServer $@ ; exit;;
+        d|downloader) run sf.download.Downloader $@; exit;;
         r|run) run $@; exit;;
         *) usage; exit;;
     esac

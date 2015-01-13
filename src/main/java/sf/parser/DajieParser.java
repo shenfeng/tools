@@ -1,6 +1,6 @@
-package me.shenfeng.parser;
+package sf.parser;
 
-import me.shenfeng.Utils;
+import sf.Utils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

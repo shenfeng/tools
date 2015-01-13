@@ -1,8 +1,6 @@
-package me.shenfeng.download;
+package sf.download;
 
 import com.google.gson.Gson;
-import me.shenfeng.MainBase;
-import me.shenfeng.Utils;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -13,6 +11,9 @@ import org.jsoup.nodes.Document;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sf.MainBase;
+import sf.ProxyManager;
+import sf.Utils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -20,7 +21,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -50,13 +50,16 @@ public class Downloader extends MainBase {
     @Option(name = "-error", usage = "Validation check word")
     protected String error = "";
 
+    @Option(name = "-remove", usage = "Selectors to remove")
+    protected String remove = "style";
+
     @Option(name = "-refer", usage = "Refer")
     protected String refer = "http://www.baid.com";
 
     private static final Logger logger = LoggerFactory.getLogger(Downloader.class);
     private FileOutputStream doneFile;
     private FileOutputStream datas;
-    private ConcurrentLinkedQueue<HttpHost> proxies;
+    private ProxyManager proxies;
 
     private static final AtomicInteger DONE = new AtomicInteger(0);
 
@@ -89,7 +92,7 @@ public class Downloader extends MainBase {
                 candidates.add(new Job(s));
         }
 
-        this.proxies = Utils.loadProxies(this.proxy);
+        this.proxies = new ProxyManager(this.proxy);
         this.doneFile = new FileOutputStream(dir + "/done", true);
         this.datas = new FileOutputStream(dir + "/datas", true);
 
@@ -124,9 +127,9 @@ public class Downloader extends MainBase {
                         return false;
                     }
                     Header[] t = resp.getHeaders("Content-Type");
-                    if (t.length > 0 && t[0].getValue().toLowerCase().contains("html")) {
+                    if (t.length > 0 && t[0].getValue().toLowerCase().contains("html") && remove.length() > 1) {
                         Document d = Jsoup.parse(body, url);
-                        d.select("style, link").remove();
+                        d.select(remove).remove();
                         this.html = d.toString();
                     } else {
                         this.html = body;
@@ -168,7 +171,7 @@ public class Downloader extends MainBase {
 
     class URLWorker implements Runnable {
         CloseableHttpClient client = HttpClientBuilder.create().build();
-        HttpHost proxy = proxies.poll();
+        HttpHost proxy = proxies.borrow();
         int proxiesJobs = 0;
 
         @Override
@@ -215,7 +218,7 @@ public class Downloader extends MainBase {
             } catch (IOException ignore) {
             }
             client = HttpClientBuilder.create().build();
-            proxy = proxies.poll();
+            proxy = proxies.borrow();
         }
     }
 }

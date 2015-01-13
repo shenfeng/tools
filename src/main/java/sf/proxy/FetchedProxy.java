@@ -1,4 +1,4 @@
-package me.shenfeng.proxy;
+package sf.proxy;
 
 /**
  * Created by feng on 1/6/15.

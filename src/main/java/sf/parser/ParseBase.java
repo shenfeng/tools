@@ -1,7 +1,7 @@
-package me.shenfeng.parser;
+package sf.parser;
 
 import com.google.gson.Gson;
-import me.shenfeng.MainBase;
+import sf.MainBase;
 import org.kohsuke.args4j.Option;
 
 import java.io.BufferedReader;

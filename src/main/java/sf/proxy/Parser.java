@@ -1,4 +1,4 @@
-package me.shenfeng.proxy;
+package sf.proxy;
 
 
 import org.jsoup.Jsoup;

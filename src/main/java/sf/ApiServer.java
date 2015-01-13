@@ -1,7 +1,7 @@
-package me.shenfeng;
+package sf;
 
 import gen.api.Dispatcher;
-import me.shenfeng.api.ApiHandler;
+import sf.api.ApiHandler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;

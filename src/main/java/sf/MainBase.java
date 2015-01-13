@@ -1,4 +1,4 @@
-package me.shenfeng;
+package sf;
 
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;

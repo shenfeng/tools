@@ -1,4 +1,4 @@
-package me.shenfeng.api;
+package sf.api;
 
 
 import gen.api.Context;

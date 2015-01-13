@@ -1,4 +1,4 @@
-package me.shenfeng.parser;
+package sf.parser;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
  */
 public class BaiduVParser extends ParseBase {
 
-    // //    java -cp "/home/ubuntu/tools/tools-1.0.jar:/home/ubuntu/tools/lib/*" me.shenfeng.parser.BaiduVParser -in datas -out json
+    // //    java -cp "/home/ubuntu/tools/tools-1.0.jar:/home/ubuntu/tools/lib/*" BaiduVParser -in datas -out json
 
     public static class Domain {
         public String siteName;

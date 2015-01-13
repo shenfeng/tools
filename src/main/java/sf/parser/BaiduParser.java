@@ -1,8 +1,8 @@
-package me.shenfeng.parser;
+package sf.parser;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import me.shenfeng.Utils;
+import sf.Utils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

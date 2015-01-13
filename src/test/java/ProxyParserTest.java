@@ -1,6 +1,6 @@
-import me.shenfeng.Utils;
-import me.shenfeng.proxy.FetchedProxy;
-import me.shenfeng.proxy.Parser;
+import sf.Utils;
+import sf.proxy.FetchedProxy;
+import sf.proxy.Parser;
 import org.junit.Assert;
 import org.junit.Test;
 

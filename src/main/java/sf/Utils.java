@@ -1,9 +1,5 @@
-package me.shenfeng;
+package sf;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import gen.api.Proxy;
-import me.shenfeng.proxy.Crawler;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
@@ -14,12 +10,13 @@ import org.apache.http.util.EntityUtils;
 
 import javax.sql.DataSource;
 import java.io.*;
-import java.lang.reflect.Type;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -93,8 +90,7 @@ public class Utils {
     public static void closeQuietly(Closeable c) {
         try {
             c.close();
-        } catch (Exception igore) {
-
+        } catch (Exception ignore) {
         }
     }
 
@@ -117,7 +113,7 @@ public class Utils {
         return null;
     }
 
-    private final static String fixCharset(String s) {
+    private static String fixCharset(String s) {
         if (s.equalsIgnoreCase("gb2312")) {
             return "gbk";
         }
@@ -158,34 +154,6 @@ public class Utils {
         return new String(bytes, 0, bytes.length, detectCharset(resp, bytes));
     }
 
-    public static ConcurrentLinkedQueue<HttpHost> loadProxies(String path) {
-        Type type = new TypeToken<List<Proxy>>() {
-        }.getType();
-
-        List<Proxy> proxies = null;
-        try {
-            String json = Crawler.fetchPage(path);
-            if (json != null) {
-                proxies = new Gson().fromJson(json, type);
-            }
-        } catch (IOException ignore) {
-        }
-
-        if (proxies == null) {
-            try (InputStream is = Utils.class.getClassLoader().getResourceAsStream(path)) {
-                proxies = new Gson().fromJson(new InputStreamReader(is), type);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        Collections.shuffle(proxies);
-        ConcurrentLinkedQueue<HttpHost> r = new ConcurrentLinkedQueue<>();
-        for (Proxy p : proxies) {
-            r.add(new HttpHost(p.host, p.port));
-        }
-        return r;
-    }
 
     public static List<String> readLines(String f) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(f))) {
