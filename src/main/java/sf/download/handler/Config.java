@@ -11,10 +11,6 @@ public class Config {
     public String seed;
     public Map<String, Map<String, String>> params;
 
-    public static class Cfg {
-        public List<String> selectors;
-        public List<Field> data;
-    }
 
     public Cfg list;
     public Cfg detail;
@@ -28,6 +24,12 @@ public class Config {
     public boolean proxy = true; // default to true
     // 如果有 timestamp，多久以后的会被抛弃掉
     public int maxdays = 0;
+
+
+    public static class Cfg {
+        public List<String> selectors;
+        public List<Field> data;
+    }
 
     public Set<String> getSeeds() {
         Set<String> seeds = new HashSet<>();
@@ -56,7 +58,7 @@ public class Config {
             if (collect) {
                 c.add(tmpl);
             } else {
-                collect(new LinkedList<Map.Entry<String, Map<String, String>>>(ps), tmpl, c); // recursive
+                collect(new LinkedList<>(ps), tmpl, c); // recursive
             }
         }
     }
