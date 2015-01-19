@@ -54,13 +54,16 @@ public class UrlWorker implements Runnable {
                         if (proxiesJobs++ >= this.jobsPerProxy) {
                             reset();
                         }
+                        break;
                     } else {
+                        logger.info("fetch {}, proxy: {}, retry: {}", job.getUrl(), proxy, retry);
                         reset();
                     }
                     resp.close();
                 } catch (IOException e) {
                     // retry
-                    logger.warn(job.getUrl(), e.getMessage());
+                    logger.warn("{}: {}/{}", job.getUrl(), e.getMessage(), retry);
+                    reset();
                 }
             }
         }

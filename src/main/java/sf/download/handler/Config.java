@@ -2,6 +2,8 @@ package sf.download.handler;
 
 import sf.Utils;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -33,6 +35,16 @@ public class Config {
     // 如果有 timestamp，多久以后的会被抛弃掉
     public int maxdays = 0;
 
+    public Set<FetchTask> getSeeds() {
+        Set<FetchTask> seeds = new HashSet<>();
+        if (params == null) {
+            seeds.add(new FetchTask(seed, true, "", new HashMap<String, String>()));
+        } else {
+            collect(new LinkedList<>(params.entrySet()), seed, seeds, new HashMap<String, String>());
+        }
+        return seeds;
+    }
+
     public static class Check {
         public String must;
         public List<String> error;
@@ -40,7 +52,7 @@ public class Config {
         public List<String> notfollow;
         public List<String> errorurl;
 
-        public Flag html(String html) {
+        public Flag isHtmlOk(String html) {
             if (Utils.isEmpty(html)) {
                 return Flag.ERROR;
             }
@@ -51,7 +63,8 @@ public class Config {
 
             if (error != null) {
                 for (String s : error) {
-                    if (html.contains(s)) {
+                    s = s.trim();
+                    if (s.length() > 0 && html.contains(s)) {
                         return Flag.PROXY;
                     }
                 }
@@ -59,7 +72,7 @@ public class Config {
             return Flag.OK;
         }
 
-        public Flag redirect(String url) {
+        public Flag isUrlOk(String url) {
             if (Utils.isEmpty(url)) {
                 return Flag.ERROR;
             }
@@ -93,17 +106,6 @@ public class Config {
         public List<Field> data;
     }
 
-    public Set<FetchTask> getSeeds() {
-        Set<FetchTask> seeds = new HashSet<>();
-        if (params == null) {
-            seeds.add(new FetchTask(seed, true, "", extras));
-        } else {
-            Map<String, String> d = new HashMap<>();
-            collect(new LinkedList<>(params.entrySet()), seed, seeds, d);
-        }
-        return seeds;
-    }
-
 
     private void collect(List<Map.Entry<String, Map<String, String>>> ps,
                          String templates, Set<FetchTask> result, Map<String, String> d) {
@@ -119,13 +121,17 @@ public class Config {
 
         for (String s : item.getValue().keySet()) {
             HashMap<String, String> data = new HashMap<>(d);
-            data.put(item.getKey(), s);
+            data.put(item.getKey(), item.getValue().get(s));
 
-            String tmpl = templates.replace(r, s);
-            if (collect) {
-                result.add(new FetchTask(tmpl, true, "", extras));
-            } else {
-                collect(new LinkedList<>(ps), tmpl, result, data); // recursive
+            try {
+                String tmpl = templates.replace(r, URLEncoder.encode(s, "utf8"));
+                if (collect) {
+                    result.add(new FetchTask(tmpl, true, "", data));
+                } else {
+                    collect(new LinkedList<>(ps), tmpl, result, data); // recursive
+                }
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException(e);
             }
         }
     }

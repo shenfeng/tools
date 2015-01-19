@@ -52,7 +52,10 @@ public class Field {
 //
 
         if (e instanceof Element) {
-            Object input = ((Element) e).select(selector);
+            Object input = e;
+            if (selector != null && selector.length() > 0)
+                input = ((Element) e).select(selector);
+
             for (Value v : vs) {
                 input = v.extract(input);
             }

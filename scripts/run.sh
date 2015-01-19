@@ -39,6 +39,7 @@ while test $# -ne 0; do
         s|server) run sf.ApiServer $@ ; exit;;
         d|downloader) run sf.download.Downloader $@; exit;;
         r|run) run $@; exit;;
+        c|crawler) run sf.download.Crawler $@; exit;;
         *) usage; exit;;
     esac
 done

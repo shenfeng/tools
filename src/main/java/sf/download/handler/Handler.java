@@ -37,12 +37,11 @@ public class Handler {
         }
     }
 
-    public ListData OnListPage(String url, String html) {
+    public ListPage OnListPage(String url, String html) {
         Document doc = Jsoup.parse(html, url);
-        ListData result = new ListData();
+        ListPage result = new ListPage();
 
         int tooOld = 0;
-
 
         if (cfg.list.selectors != null) {
             // 列表页一般会列出一些meta信息，对应为 config里面的list 配置项

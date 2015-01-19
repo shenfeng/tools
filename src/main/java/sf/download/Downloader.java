@@ -112,7 +112,7 @@ public class Downloader extends MainBase {
                     return false;
                 }
 
-                // redirect, should follow
+                // isUrlOk, should follow
                 return status >= 300 && status <= 400;
             }
         }
@@ -223,7 +223,7 @@ public class Downloader extends MainBase {
 //                        return false;
 //                    }
 //
-//                    // redirect, should follow
+//                    // isUrlOk, should follow
 //                    return status >= 300 && status <= 400;
 //                }
 //            } catch (Exception e) {

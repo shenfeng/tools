@@ -6,8 +6,9 @@ import org.junit.Test;
 import sf.Utils;
 import sf.download.handler.Handler;
 import sf.download.handler.Config;
-import sf.download.handler.ListData;
+import sf.download.handler.ListPage;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -17,12 +18,12 @@ import java.util.Map;
 public class CrawlerTest {
 
     @Test
-    public void testCrawler58() {
+    public void testCrawlerLiepin() {
         Config cfg = new Gson().fromJson(Utils.getResource("crawler/liepin_com.json"), Config.class);
         Assert.assertEquals(40 * 52, cfg.getSeeds().size());
 
         Handler h = new Handler(cfg);
-        ListData l = h.OnListPage("http://company.liepin.com/so/?pagesize=20&keywords=&dq=010&industry=000&e_kind=000",
+        ListPage l = h.OnListPage("http://company.liepin.com/so/?pagesize=20&keywords=&dq=010&industry=000&e_kind=000",
                 Utils.getResource("crawler/liepin_com_list.html"));
 
         Map<String, Object> d = h.OnDetailPage("http://company.liepin.com/7920451",
@@ -44,5 +45,25 @@ public class CrawlerTest {
 
         Assert.assertEquals(3, ((List) d.get("pics")).size());
         Assert.assertEquals(((List) d.get("tags")).size(), 13);
+    }
+
+
+    @Test
+    public void testZhaopin() {
+        Config cfg = new Gson().fromJson(Utils.getResource("crawler/zhaopin_com.json"), Config.class);
+        Assert.assertEquals(52 * 36, cfg.getSeeds().size());
+        Assert.assertEquals(cfg.getSeeds().size(), new HashSet<>(cfg.getSeeds()).size());
+
+        Handler h = new Handler(cfg);
+        ListPage l = h.OnListPage("http://sou.zhaopin.com/jobs/searchresult.ashx?jl=%E5%8C%97%E4%BA%AC&kw=%E7%9F%A5&kt=2&isadv=0&sg=49ac9abbd1704b67a6cb441bcded4620&p=3",
+                Utils.getResource("crawler/zhaopin_list.html"));
+
+
+        Map<String, Object> d = h.OnDetailPage("http://company.zhaopin.com/P2/CC1906/5941/CC190659416.htm",
+                Utils.getResource("crawler/zhaopin_detail.html"));
+
+        Assert.assertEquals("北京嘉和知远咨询有限公司", d.get("company"));
+        Assert.assertTrue(d.get("properties").toString().contains("专业服务/咨询"));
+        Assert.assertTrue(d.get("introduction").toString().contains("北京嘉和知远咨询"));
     }
 }

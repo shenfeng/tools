@@ -1,21 +1,20 @@
 package sf.download.handler;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sf.Utils;
 
 import java.io.*;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by feng on 1/14/15.
  */
-public class PersistentQueue {
+public class PQueue {
     public final String dir;
 
     static final String PENDING_FILE = "__tasks.json";
@@ -24,22 +23,24 @@ public class PersistentQueue {
     static final String RESULT_FILE = "__results.json";
 
     private final Gson gson = new Gson();
-    private static final Logger logger = LoggerFactory.getLogger(PersistentQueue.class);
+    private static final Logger logger = LoggerFactory.getLogger(PQueue.class);
 
     private final AtomicInteger dedup = new AtomicInteger(0);
 
-    private final FileOutputStream doneFos;
+    //    private final FileOutputStream doneFos;
     private final FileOutputStream pendingFos;
     private final FileOutputStream tmpResultFos;
 
     private final LinkedList<FetchTask> queue = new LinkedList<>();
+    private final HashSet<String> queued = new HashSet<>();
     private final Map<String, Config> configs;
+    private final FileOutputStream doneFos;
 
     public Config get(String key) {
         return configs.get(key);
     }
 
-    public PersistentQueue(String dir, Map<String, Config> configs) throws IOException {
+    public PQueue(String dir, Map<String, Config> configs) throws IOException {
         this.dir = dir;
         this.configs = configs;
 
@@ -59,19 +60,13 @@ public class PersistentQueue {
             String line;
             try (BufferedReader br = new BufferedReader(new FileReader(join(DONE_FILE)))) {
                 while ((line = br.readLine()) != null) {
-                    markDone(line.trim());
+                    doneUrls.add(line.trim());
                 }
             }
 
-            int done = 0;
             try (BufferedReader br = new BufferedReader(new FileReader(join(PENDING_FILE)))) {
                 while ((line = br.readLine()) != null) {
-                    FetchTask task = gson.fromJson(line, FetchTask.class);
-                    if (!isDone(task.url)) {
-                        queue.add(task);
-                    } else {
-                        done += 1;
-                    }
+                    queueTask(gson.fromJson(line, FetchTask.class), false);
                 }
             }
         } else {
@@ -81,21 +76,44 @@ public class PersistentQueue {
                     task.config = entry.getKey();
                     queueTask(task);
                 }
-//                for (String url : tasks) {
-//                    queueTask(new FetchTask(url, true, entry.getKey(), extras));
-//                }
             }
         }
+        Collections.shuffle(queue);
+        logger.info("resume: {}, done: {}, dedup: {}, queue: {}", resume, doneUrls.size(), dedup.get(), queue.size());
     }
 
-    public synchronized boolean queueTask(FetchTask task) {
-        if (isDone(task.url)) {
+    int n = 0;
+
+    public boolean queueTask(FetchTask task) {
+        return queueTask(task, true);
+    }
+
+    public synchronized boolean queueTask(FetchTask task, boolean disk) {
+        if (isDone(task.url) || queued.contains(task.getUrl())) {
             dedup.incrementAndGet();
             return false;
         } else {
             queue.add(task);
-            append(this.pendingFos, task);
+            queued.add(task.getUrl());
+            if (++n % 5000 == 0) {
+                Collections.shuffle(queue);
+            }
+            if (disk) {
+                append(this.pendingFos, task);
+            }
             return true;
+        }
+    }
+
+
+    public void markDone(String url) {
+        synchronized (doneUrls) {
+            doneUrls.add(url);
+            try {
+                this.doneFos.write((url + "\n").getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
+            }
         }
     }
 
@@ -114,6 +132,8 @@ public class PersistentQueue {
             dedup.incrementAndGet();
             task = queue.poll();
         }
+        if (task != null)
+            queued.remove(task.getUrl());
         return task;
     }
 
@@ -135,25 +155,20 @@ public class PersistentQueue {
     }
 
 
-    private static final String HTTP = "http://";
+    //    private static final String HTTP = "http://";
     private final HashSet<String> doneUrls = new HashSet<>();
 
-    private String cleanUpUrl(String url) {
-        if (url.startsWith(HTTP)) {
-            url = url.substring(HTTP.length());
-        }
-        return url;
-    }
+//    private String cleanUpUrl(String url) {
+//        if (url.startsWith(HTTP)) {
+//            url = url.substring(HTTP.length());
+//        }
+//        return url;
+//    }
 
     private boolean isDone(String url) {
         synchronized (doneUrls) {
-            return doneUrls.contains(cleanUpUrl(url));
+            return doneUrls.contains(url);
         }
     }
 
-    private void markDone(String url) {
-        synchronized (doneUrls) {
-            doneUrls.add(cleanUpUrl(url));
-        }
-    }
 }

@@ -20,9 +20,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Fetcher {
     private final ProxyManager manager;
     private final int threads;
-    private final PersistentQueue queue;
+    private final PQueue queue;
 
-    public Fetcher(ProxyManager manager, int threads, PersistentQueue queue) {
+    public Fetcher(ProxyManager manager, int threads, PQueue queue) {
         this.manager = manager;
         this.threads = threads;
         this.queue = queue;
@@ -53,7 +53,7 @@ public class Fetcher {
             if (task.status != 200) {
                 if (task.status == 301 || task.status == 302) {
                     String r = Utils.getLocation(resp);
-                    switch (cfg.check.redirect(r)) {
+                    switch (cfg.check.isUrlOk(r)) {
                         case OK:
                             task.followUrl = r;
                             return false; // retry
@@ -69,7 +69,7 @@ public class Fetcher {
                 return false;
             } else {
                 task.html = Utils.toString(resp);
-                switch (cfg.check.html(task.html)) {
+                switch (cfg.check.isHtmlOk(task.html)) {
                     case OK:
                         return true;
                     case PROXY:
@@ -83,25 +83,39 @@ public class Fetcher {
 
         @Override
         public void done(CloseableHttpResponse resp) {
+            queue.markDone(task.url);
             if (task.listpage) {
-                ListData d = this.h.OnListPage(task.url, task.html);
-                int added = 0, list = 0;
+                ListPage d = this.h.OnListPage(task.url, task.html);
+                int added = 0, list = 0, dedup = 0, ignore = 0;
                 for (String page : d.pages) { // follow list page
+                    if (cfg.check.isUrlOk(page) == Config.Flag.NOT_FOLLOW) {
+                        continue;
+                    }
+
                     if (queue.queueTask(new FetchTask(page, true, task.config, task.extras))) {
                         added += 1;
                         list += 1;
+                    } else {
+                        dedup += 1;
                     }
                 }
 
                 if (!cfg.ignoredetail) {
                     for (Map<String, Object> detail : d.details) {
                         String u = detail.get(Handler.URL).toString();
+                        if (cfg.check.isUrlOk(u) == Config.Flag.NOT_FOLLOW) {
+                            continue;
+                        }
+
                         if (queue.queueTask(new FetchTask(u, task))) {
                             added += 1;
+                        } else {
+                            dedup += 1;
                         }
-                    }
-                    for (Map<String, Object> detail : d.details) {
-                        queue.appendResult(detail);
+
+                        if (detail.size() > 1) {
+                            queue.appendResult(detail);
+                        }
                     }
                 }
 
@@ -110,14 +124,19 @@ public class Fetcher {
                         startWorkerThread();
                     }
                 }
+                logger.info("done ignore/list/detail/dedup {}/{}/{}/{}, {}", ignore, added, list, d.details.size(), dedup, task.url);
             } else {
                 Map<String, Object> r = h.OnDetailPage(task.url, task.html);
                 if (r != null) {
                     if (task.followUrl != null) {
                         r.put("real_url", task.followUrl);
                     }
+                    if (task.extras != null) {
+                        r.putAll(task.extras);
+                    }
                     queue.appendResult(r);
                 }
+                logger.info("detail done: {} {}", task.url, task.html.length());
             }
         }
 

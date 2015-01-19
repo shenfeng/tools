@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * Created by feng on 8/26/14.
  */
-public class ListData {
+public class ListPage {
     // list翻页的url
     public final List<String> pages = new ArrayList<>();
 
