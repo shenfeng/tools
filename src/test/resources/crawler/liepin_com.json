@@ -62,7 +62,15 @@
       }
     ]
   },
-  "check": "猎聘网",
+
+  "check": {
+    "must": "猎聘网", // 必须包含
+    "error": [""], // 限制，需要启用proxy
+
+    "notfollow": [],  // 这些redirect不跟， regex
+    "errorurl": [] // 限制 需要启用proxy
+  },
+
   "params": {
     "dq": {
       "100": "甘肃省",

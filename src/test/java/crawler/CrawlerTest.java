@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import junit.framework.Assert;
 import org.junit.Test;
 import sf.Utils;
-import sf.download.handler.BaseHandler;
+import sf.download.handler.Handler;
 import sf.download.handler.Config;
 import sf.download.handler.ListData;
 
@@ -21,7 +21,7 @@ public class CrawlerTest {
         Config cfg = new Gson().fromJson(Utils.getResource("crawler/liepin_com.json"), Config.class);
         Assert.assertEquals(40 * 52, cfg.getSeeds().size());
 
-        BaseHandler h = new BaseHandler(cfg);
+        Handler h = new Handler(cfg);
         ListData l = h.OnListPage("http://company.liepin.com/so/?pagesize=20&keywords=&dq=010&industry=000&e_kind=000",
                 Utils.getResource("crawler/liepin_com_list.html"));
 

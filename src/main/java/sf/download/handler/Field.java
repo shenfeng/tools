@@ -14,11 +14,13 @@ import java.util.List;
  * Created by feng on 8/21/14.
  */
 public class Field {
+
     private static List<Class<? extends Value>> classes = Arrays.asList(
             AttrValue.class, ConcatValue.class, DateTsValue.class,
             HtmlValue.class, IdentityValue.class, JsonAttrValue.class,
             RegexValue.class, SplitValue.class, TextValue.class
     );
+
     // 名字，比如title， url， kind
     public String name;
     // jquery selector

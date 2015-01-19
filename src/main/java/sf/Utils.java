@@ -204,6 +204,15 @@ public class Utils {
         }
     }
 
+    public static String getLocation(HttpResponse resp) {
+        Header location = resp.getFirstHeader("Location");
+        if (location != null) {
+            return location.getValue();
+        } else {
+            return "";
+        }
+    }
+
     public static String getResource(String r) {
         InputStream in = Utils.class.getClassLoader().getResourceAsStream(r);
         try {

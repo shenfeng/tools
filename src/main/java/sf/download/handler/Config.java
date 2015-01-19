@@ -1,7 +1,10 @@
 package sf.download.handler;
 
+import sf.Utils;
+
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Created by feng on 1/13/15.
@@ -17,33 +20,93 @@ public class Config {
 
     public List<String> pager;
 
-    //
-    public String check;
+    public Check check = new Check(); // make sure not null
+
+//    // 必须包含 check，并且必须不包含 errorcheck。有errorcheck，启用proxy
+//    public String check;
+//    public String errorcheck;
+//    public List<String> notfollow;
+
     // 不再跟详情页
     public boolean ignoredetail = false;
     public boolean proxy = true; // default to true
     // 如果有 timestamp，多久以后的会被抛弃掉
     public int maxdays = 0;
 
+    public static class Check {
+        public String must;
+        public List<String> error;
+
+        public List<String> notfollow;
+        public List<String> errorurl;
+
+        public Flag html(String html) {
+            if (Utils.isEmpty(html)) {
+                return Flag.ERROR;
+            }
+
+            if (!Utils.isEmpty(must) && !html.contains(must)) {
+                return Flag.ERROR;
+            }
+
+            if (error != null) {
+                for (String s : error) {
+                    if (html.contains(s)) {
+                        return Flag.PROXY;
+                    }
+                }
+            }
+            return Flag.OK;
+        }
+
+        public Flag redirect(String url) {
+            if (Utils.isEmpty(url)) {
+                return Flag.ERROR;
+            }
+            if (notfollow != null) {
+                for (String s : notfollow) {
+                    if (Pattern.matches(s, url)) {
+                        return Flag.NOT_FOLLOW;
+                    }
+                }
+            }
+            if (errorurl != null) {
+                for (String s : errorurl) {
+                    if (Pattern.matches(s, url)) {
+                        return Flag.PROXY;
+                    }
+                }
+            }
+            return Flag.OK;
+        }
+    }
+
+    public static enum Flag {
+        OK,
+        ERROR,
+        PROXY,
+        NOT_FOLLOW
+    }
 
     public static class Cfg {
         public List<String> selectors;
         public List<Field> data;
     }
 
-    public Set<String> getSeeds() {
-        Set<String> seeds = new HashSet<>();
+    public Set<FetchTask> getSeeds() {
+        Set<FetchTask> seeds = new HashSet<>();
         if (params == null) {
-            seeds.add(seed);
+            seeds.add(new FetchTask(seed, true, "", extras));
         } else {
-            collect(new LinkedList<>(params.entrySet()), seed, seeds);
+            Map<String, String> d = new HashMap<>();
+            collect(new LinkedList<>(params.entrySet()), seed, seeds, d);
         }
-
         return seeds;
     }
 
 
-    private void collect(LinkedList<Map.Entry<String, Map<String, String>>> ps, String templates, Set<String> c) {
+    private void collect(List<Map.Entry<String, Map<String, String>>> ps,
+                         String templates, Set<FetchTask> result, Map<String, String> d) {
         if (ps.isEmpty()) {
             return;
         }
@@ -53,12 +116,16 @@ public class Config {
         Map.Entry<String, Map<String, String>> item = it.next();
         it.remove();
         String r = "${" + item.getKey() + "}";
+
         for (String s : item.getValue().keySet()) {
+            HashMap<String, String> data = new HashMap<>(d);
+            data.put(item.getKey(), s);
+
             String tmpl = templates.replace(r, s);
             if (collect) {
-                c.add(tmpl);
+                result.add(new FetchTask(tmpl, true, "", extras));
             } else {
-                collect(new LinkedList<>(ps), tmpl, c); // recursive
+                collect(new LinkedList<>(ps), tmpl, result, data); // recursive
             }
         }
     }

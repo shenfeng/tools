@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 
-public class BaseHandler {
+public class Handler {
     // special key
     public static final String URL = "url";
     public static final String TITLE = "title";
@@ -20,7 +20,7 @@ public class BaseHandler {
 
     public final Config cfg;
 
-    public BaseHandler(Config cfg) {
+    public Handler(Config cfg) {
         this.cfg = cfg;
     }
 
@@ -49,11 +49,9 @@ public class BaseHandler {
             // 子类有特殊需要，可以override
             for (String selector : cfg.list.selectors) {
                 for (Element e : doc.select(selector)) {
-
                     Map<String, Object> m = new HashMap<>();
                     for (Field f : cfg.list.data) {
                         Object value = f.get(e);
-
                         if (value != null) {
                             if (f.name.equalsIgnoreCase(URL)) {
                                 // convert to absolute path
@@ -76,7 +74,6 @@ public class BaseHandler {
 
                     //  timestamp 是个特殊字段  ignore too old item
                     if (m.containsKey(TIMESTAMP)) {
-
                         if (cfg.isTooOld(m.get(TIMESTAMP).toString())) {
                             tooOld += 1;
                             continue;
@@ -108,7 +105,6 @@ public class BaseHandler {
             return null;
         }
         Document doc = Jsoup.parse(html, url);
-
         // 重新定义root节点
         List<Element> roots = new ArrayList<>();
         if (cfg.detail.selectors != null && !cfg.detail.selectors.isEmpty()) {
@@ -126,17 +122,15 @@ public class BaseHandler {
         for (Element e : roots) {
             for (Field field : cfg.detail.data) {
                 Object v = field.get(e);
-
                 if (v != null && field.name.contains(URL)) {
                     v = Resolve(url, v.toString());
                 }
-
                 if (v != null) {
                     m.put(field.name, v);
                 }
             }
         }
-        m.put(BaseHandler.URL, url);
+        m.put(Handler.URL, url);
         return m;
     }
 }
